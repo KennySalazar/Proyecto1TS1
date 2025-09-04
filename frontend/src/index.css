@@ -1,0 +1,37 @@
+/* src/index.css  — reemplázalo por esto */
+html, body, #root { height: 100%; }
+
+.wrap { max-width: 920px; margin: 0 auto; padding: 16px; }
+.toolbar { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+.muted { opacity: .7; }
+.error { color: #f66; }
+.list { display: grid; gap: 10px; }
+.card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 12px; }
+.card-row { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.card-actions { display: flex; gap: 8px; margin-top: 8px; }
+.badge { padding: 2px 8px; border-radius: 999px; font-size: 12px; border: 1px solid transparent; }
+.badge-warn { background: #fff3; border-color: #ffb40055; }
+.badge-info { background: #fff3; border-color: #5ab0ff55; }
+.badge-ok { background: #fff3; border-color: #42d77a55; }
+.badge-error { background: #fff3; border-color: #ff767655; }
+.btn { padding: 6px 10px; border: 1px solid #ffffff22; border-radius: 8px; background: transparent; cursor: pointer; }
+.btn-xs { padding: 4px 8px; font-size: 12px; }
+.btn-success { border-color: #42d77a88; }
+.btn-danger { border-color: #ff767688; }
+pre.json { background: #00000022; padding: 8px; border-radius: 8px; overflow: auto; }
+
+.wrap { max-width: 980px; margin: 0 auto; padding: 16px; }
+.grid { display: grid; gap: 12px; }
+.grid.two { grid-template-columns: repeat(2, minmax(0,1fr)); }
+.grid.three { grid-template-columns: repeat(3, minmax(0,1fr)); }
+.grid.four { grid-template-columns: repeat(4, minmax(0,1fr)); }
+@media (max-width: 900px){
+  .grid.two, .grid.three, .grid.four { grid-template-columns: 1fr; }
+}
+input, select, textarea { width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ffffff22; background: transparent; color: inherit; }
+.btn { padding: 10px 14px; border: 1px solid #ffffff22; border-radius: 10px; background: transparent; cursor: pointer; }
+.list { display: grid; gap: 10px; margin-top: 8px; }
+.card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 12px; }
+.card-row { display: flex; gap: 10px; justify-content: space-between; align-items: center; }
+.card-actions { display: flex; gap: 8px; }
+
