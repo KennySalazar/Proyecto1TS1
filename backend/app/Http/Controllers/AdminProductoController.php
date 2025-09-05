@@ -1,111 +1,98 @@
 <?php
 
+// app/Http/Controllers/AdminProductoController.php
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
 use App\Models\Producto;
 use App\Models\Categoria;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
+use App\Models\PcCategoria;
 
 class AdminProductoController extends Controller
 {
-    // POST /api/admin/componentes
-    public function crearComponente(Request $r)
+    // Categorías de componentes
+    public function listarCategoriasComponentes()
     {
-        $data = $r->validate([
-            'sku'          => 'required|string|max:40|unique:productos,sku',
-            'nombre'       => 'required|string|max:160',
-            'descripcion'  => 'nullable|string',
-            'categoria_id' => 'required|integer|exists:categorias,id',
-            'precio'       => 'required|numeric|min:0',
-            'costo'        => 'required|numeric|min:0',
-            'stock'        => 'required|integer|min:0',
-            'stock_minimo' => 'required|integer|min:0',
-            'estado'       => ['nullable','string', Rule::in(['ACTIVO','INACTIVO'])],
+        return response()->json([
+            'categorias' => Categoria::orderBy('nombre')->get(['id','nombre','descripcion'])
         ]);
-
-        $p = Producto::create([
-            'sku'          => $data['sku'],
-            'nombre'       => $data['nombre'],
-            'descripcion'  => $data['descripcion'] ?? null,
-            'tipo'         => Producto::TIPO_COMPONENTE,
-            'categoria_id' => $data['categoria_id'],
-            'precio'       => $data['precio'],
-            'costo'        => $data['costo'],
-            'stock'        => $data['stock'],
-            'stock_minimo' => $data['stock_minimo'],
-            'estado'       => $data['estado'] ?? 'ACTIVO',
-        ]);
-
-        return response()->json(['message'=>'Componente creado','producto'=>$p],201);
     }
 
-    // POST /api/admin/prearmadas
-    // Recibe: sku, nombre, descripcion?, precio, costo, stock, stock_minimo, estado?, bom:[{componente_id,cantidad}]
-    public function crearPrearmada(Request $r)
+    // Categorías de PCs (prearmadas)
+    public function listarCategoriasPC()
     {
-        $data = $r->validate([
-            'sku'          => 'required|string|max:40|unique:productos,sku',
-            'nombre'       => 'required|string|max:160',
-            'descripcion'  => 'nullable|string',
-            'precio'       => 'required|numeric|min:0',
-            'costo'        => 'required|numeric|min:0',
-            'stock'        => 'required|integer|min:0',
-            'stock_minimo' => 'required|integer|min:0',
-            'estado'       => ['nullable','string', Rule::in(['ACTIVO','INACTIVO'])],
-            'bom'          => 'required|array|min:1',
-            'bom.*.componente_id' => [
-                'required','integer','distinct',
-                Rule::exists('productos','id')->where(fn($q)=>$q->where('tipo','COMPONENTE'))
-            ],
-            'bom.*.cantidad' => 'required|integer|min:1',
+        return response()->json([
+            'categorias' => PcCategoria::orderBy('nombre')->get(['id','nombre','descripcion'])
+        ]);
+    }
+
+    // Lista de componentes disponibles para BOM (stock > 0)
+    public function listarComponentesParaBom(Request $r)
+    {
+        $search = trim((string)$r->input('search',''));
+
+        $q = Producto::query()
+            ->select(['id','sku','nombre','marca','modelo','stock'])
+            ->where('tipo','COMPONENTE')
+            ->where('stock','>',0);
+
+        if ($search !== '') {
+            $like = "%{$search}%";
+            $q->where(function($w) use ($like) {
+                $w->where('sku','like',$like)
+                  ->orWhere('nombre','like',$like)
+                  ->orWhere('marca','like',$like)
+                  ->orWhere('modelo','like',$like);
+            });
+        }
+
+        return response()->json([
+            'componentes' => $q->orderBy('nombre')->limit(1000)->get()
+        ]);
+    }
+
+    // Crear componente
+    public function crearComponente(Request $request)
+    {
+        $data = $request->validate([
+            'sku'             => 'required|string|max:40|unique:productos,sku',
+            'nombre'          => 'required|string|max:160',
+            'marca'           => 'nullable|string|max:80',
+            'modelo'          => 'nullable|string|max:80',
+            'descripcion'     => 'nullable|string',
+            'especificaciones'=> 'nullable|string',
+            'categoria_id'    => 'required|exists:categorias,id',
+            'precio'          => 'required|numeric|min:0',
+            'stock'           => 'required|integer|min:0',
         ]);
 
-        return DB::transaction(function() use ($data) {
-            $pre = Producto::create([
-                'sku'          => $data['sku'],
-                'nombre'       => $data['nombre'],
-                'descripcion'  => $data['descripcion'] ?? null,
-                'tipo'         => Producto::TIPO_PREARMADA,
-                'categoria_id' => null,
-                'precio'       => $data['precio'],
-                'costo'        => $data['costo'],
-                'stock'        => $data['stock'],
-                'stock_minimo' => $data['stock_minimo'],
-                'estado'       => $data['estado'] ?? 'ACTIVO',
-            ]);
+        $p = Producto::create(array_merge($data, [
+            'tipo' => 'COMPONENTE',
+        ]));
 
-            // Insertar BOM
-            $rows = [];
-            foreach ($data['bom'] as $i) {
-                $rows[] = [
-                    'producto_id'   => $pre->id,
-                    'componente_id' => $i['componente_id'],
-                    'cantidad'      => $i['cantidad'],
-                ];
-            }
-            DB::table('recetas_prearmadas')->insert($rows);
-
-            return response()->json([
-                'message'=>'PC prearmada creada',
-                'producto'=>$pre,
-                'bom'=>$rows
-            ],201);
-        });
+        return response()->json(['message'=>'Componente creado','producto'=>$p], 201);
     }
 
-    // GET /api/admin/categorias
-    public function listarCategorias()
+    // Crear prearmada
+    public function crearPrearmada(Request $request)
     {
-        return response()->json(['categorias'=>Categoria::orderBy('nombre')->get()]);
-    }
+        $data = $request->validate([
+            'sku'             => 'required|string|max:40|unique:productos,sku',
+            'nombre'          => 'required|string|max:160',
+            'marca'           => 'nullable|string|max:80',
+            'modelo'          => 'nullable|string|max:80',
+            'descripcion'     => 'nullable|string',
+            'especificaciones'=> 'nullable|string',
+            'pc_categoria_id' => 'required|exists:pc_categorias,id',
+            'precio'          => 'required|numeric|min:0',
+            'stock'           => 'required|integer|min:0',
+        ]);
 
-    // GET /api/admin/componentes (para seleccionar en el BOM)
-    public function listarComponentes()
-    {
-        $list = Producto::where('tipo', Producto::TIPO_COMPONENTE)
-                ->orderBy('nombre')->get(['id','sku','nombre','precio','stock','stock_minimo','estado','categoria_id']);
-        return response()->json(['componentes'=>$list]);
+        $p = Producto::create(array_merge($data, [
+            'tipo' => 'PREARMADA',
+        ]));
+
+        return response()->json(['message'=>'Prearmada creada','producto'=>$p], 201);
     }
 }
+

@@ -9,6 +9,7 @@ import EmpleadoTareas from "./pages/EmpleadoTareas.jsx";
 import AdminNuevoComponente from "./pages/AdminNuevoComponente.jsx";
 import AdminNuevaPrearmada from "./pages/AdminNuevaPrearmada.jsx";
 import AdminNuevaTarea from "./pages/AdminNuevaTarea.jsx";
+import EmpleadoCatalogo from "./pages/EmpleadoCatalogo.jsx";
 
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
@@ -18,38 +19,42 @@ function Home() {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login" replace />;
 
-    if (user.rol !== "ADMINISTRADOR") {
-    return <Navigate to="/empleado/tareas" replace />;
-  }
+  const isAdmin = user.rol === "ADMINISTRADOR";
 
   return (
     <div className="d-flex align-items-center justify-content-center vh-100 w-100 bg-light">
-      <div className="card shadow-sm">
+      <div className="card shadow-sm" style={{minWidth: 420}}>
         <div className="card-body">
           <h4 className="card-title mb-3">
             <i className="bi bi-house-door me-2" />
             Inicio
           </h4>
-          <p className="mb-0">
+          <p className="mb-3">
             Hola, <b>{user.nombre}</b> ({user.rol})
           </p>
 
-          {user.rol === "ADMINISTRADOR" && (
-            <div className="mt-3 d-flex flex-wrap gap-2">
+          {isAdmin ? (
+            <div className="d-grid gap-2">
               <Link to="/admin/empleados" className="btn btn-outline-secondary">
-                <i className="bi bi-list-ul me-1" /> Ver empleados
-              </Link>
-              <Link to="/admin/empleados/nuevo" className="btn btn-primary">
-                <i className="bi bi-person-plus me-1" /> Crear empleado
+                <i className="bi bi-people me-1" /> Empleados
               </Link>
               <Link to="/admin/componentes/nuevo" className="btn btn-outline-primary">
                 <i className="bi bi-cpu me-1" /> Nuevo componente
               </Link>
               <Link to="/admin/prearmadas/nuevo" className="btn btn-outline-primary">
-                <i className="bi bi-pc me-1" /> Nueva prearmada
+                <i className="bi bi-pc me-1" /> Nueva PC prearmada
               </Link>
               <Link to="/admin/tareas/nueva" className="btn btn-outline-primary">
-                <i className="bi bi-clipboard-plus me-1" /> Nueva tarea
+                <i className="bi bi-clipboard-plus me-1" /> Nueva tarea (ensamblaje)
+              </Link>
+            </div>
+          ) : (
+            <div className="d-grid gap-2">
+              <Link to="/empleado/catalogo" className="btn btn-outline-primary">
+                <i className="bi bi-shop me-1" /> Catálogo (componentes y PCs)
+              </Link>
+              <Link to="/empleado/tareas" className="btn btn-outline-secondary">
+                <i className="bi bi-clipboard-check me-1" /> Mis tareas
               </Link>
             </div>
           )}
@@ -58,6 +63,7 @@ function Home() {
     </div>
   );
 }
+
 
 export default function App() {
   return (
@@ -118,6 +124,14 @@ export default function App() {
             element={
               <PrivateRoute role="ADMINISTRADOR">
                 <AdminNuevaTarea />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/empleado/catalogo"
+            element={
+              <PrivateRoute>
+                <EmpleadoCatalogo />
               </PrivateRoute>
             }
           />

@@ -104,12 +104,30 @@ export default function EmpleadoTareas() {
                   <small className="text-muted">vence: {fmt(t.vence_en)}</small>
                 </div>
 
-               <div className="bg-light p-2 rounded small mb-2" style={{whiteSpace:'pre-wrap'}}>
-                  { (t.datos ?? '').trim() !== '' 
-                      ? t.datos 
-                      : <span className="text-muted">Sin detalles</span> }
-                </div>
+{/* DESCRIPCIÓN (si existe) */}
+{((t.descripcion ?? t.datos ?? "") + "").trim() !== "" && (
+  <div
+    className="bg-light p-2 rounded small mb-2"
+    style={{ whiteSpace: "pre-wrap" }}
+  >
+    {t.descripcion ?? t.datos}
+  </div>
+)}
 
+
+{/* ITEMS / BOM (si existen) */}
+{Array.isArray(t.items) && t.items.length > 0 && (
+  <ul className="small mb-2">
+    {t.items.map((it) => (
+      <li key={it.id || `${it.componente_id}`}>
+        {it.producto?.sku ? `${it.producto.sku} — ` : ""}
+        {it.producto?.nombre || `#${it.componente_id}`} × {it.cantidad}
+      </li>
+    ))}
+  </ul>
+)}
+
+               
                 <div className="d-flex justify-content-between align-items-center">
                   <small className="text-muted">
                     creado: {fmt(t.creado_en)} · actualizado: {fmt(t.actualizado_en)}
