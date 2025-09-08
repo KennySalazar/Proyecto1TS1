@@ -67,7 +67,6 @@ export default function EmpleadoTareas() {
         <select className="form-select form-select-sm" style={{width:200}}
                 value={qTipo} onChange={(e) => setQTipo(e.target.value)}>
           <option value="">Tipo: todas</option>
-          <option value="VENTA">VENTA</option>
           <option value="ENSAMBLAJE">ENSAMBLAJE</option>
         </select>
 
@@ -79,10 +78,6 @@ export default function EmpleadoTareas() {
           <option value="TERMINADA">TERMINADA</option>
           <option value="CANCELADA">CANCELADA</option>
         </select>
-
-        <button className="btn btn-sm btn-outline-secondary" onClick={fetchAll}>
-          <i className="bi bi-arrow-clockwise" /> Actualizar
-        </button>
 
         <span className="text-muted ms-auto">Total: {total}</span>
       </div>

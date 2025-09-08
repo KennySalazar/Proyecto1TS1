@@ -6,6 +6,8 @@ export default function AppNavbar() {
   const location = useLocation();
   if (location.pathname === "/login") return null;
 
+  const isAdmin = user?.rol === "ADMINISTRADOR";
+
   return (
     <nav className="navbar navbar-dark bg-dark">
       <div className="container">
@@ -14,7 +16,7 @@ export default function AppNavbar() {
         </Link>
 
         <div className="d-flex align-items-center gap-3">
-          {user && user.rol !== "ADMINISTRADOR" && (
+          {user && !isAdmin && (
             <>
               <Link to="/empleado/catalogo" className="nav-link">
                 <i className="bi bi-shop me-1" /> Catálogo
@@ -22,8 +24,26 @@ export default function AppNavbar() {
               <Link to="/empleado/tareas" className="nav-link">
                 <i className="bi bi-clipboard-check me-1" /> Mis tareas
               </Link>
+              <Link to="/empleado/venta" className="nav-link">
+                <i className="bi bi-bag-check me-1" /> Vender
+              </Link>
+              <Link to="/empleado/ventas" className="nav-link">
+                <i className="bi bi-receipt me-1" /> Mis ventas
+              </Link>
             </>
           )}
+
+          {user && isAdmin && (
+            <>
+              <Link to="/admin/empleados" className="nav-link">
+                <i className="bi bi-people me-1" /> Empleados
+              </Link>
+              <Link to="/admin/ventas" className="nav-link">
+                <i className="bi bi-clipboard-data me-1" /> Ventas (admin)
+              </Link>
+            </>
+          )}
+
           {user ? (
             <button className="btn btn-outline-light btn-sm" onClick={logout}>
               <i className="bi bi-box-arrow-right me-1" /> Salir

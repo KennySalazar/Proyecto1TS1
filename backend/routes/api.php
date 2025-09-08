@@ -8,6 +8,7 @@ use App\Http\Controllers\TareaController;
 use App\Http\Controllers\AdminProductoController;
 use App\Http\Controllers\CatalogoController;
 use App\Http\Middleware\IsAdmin;
+use App\Http\Controllers\VentaController;
 
 Route::post('/login', [AuthController::class, 'login']);
 
@@ -33,6 +34,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Tareas (solo ENSAMBLAJE)
         Route::post('/tareas', [TareaController::class, 'store']);
+
+        Route::get('/admin/ventas',      [VentaController::class, 'adminIndex']);  // todas
+        Route::get('/admin/ventas/{id}', [VentaController::class, 'show']);       // detalle
     });
 
     // Catálogo visible para empleados (y admin si quieres probar)
@@ -41,4 +45,15 @@ Route::middleware('auth:sanctum')->group(function () {
     // Tareas (empleado / admin)
     Route::get('/tareas',               [TareaController::class, 'index']);
     Route::patch('/tareas/{id}/estado', [TareaController::class, 'actEstado']);
+
+    // Empleado
+    Route::get('/ventas',        [VentaController::class, 'index']);
+    Route::get('/ventas/{id}',   [VentaController::class, 'show']);
+    Route::post('/ventas',       [VentaController::class, 'store']);
+    Route::post('/ventas/{id}/pagar', [VentaController::class, 'pagar']);
+    Route::post('/ventas/{id}/cancelar',[VentaController::class, 'cancelar']);
+
+    // Admin
+    Route::get('/admin/ventas',      [VentaController::class, 'adminIndex']);
+    Route::get('/admin/ventas/{id}', [VentaController::class, 'show']);
 });

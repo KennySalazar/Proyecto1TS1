@@ -10,6 +10,9 @@ import AdminNuevoComponente from "./pages/AdminNuevoComponente.jsx";
 import AdminNuevaPrearmada from "./pages/AdminNuevaPrearmada.jsx";
 import AdminNuevaTarea from "./pages/AdminNuevaTarea.jsx";
 import EmpleadoCatalogo from "./pages/EmpleadoCatalogo.jsx";
+import EmpleadoVenta from "./pages/EmpleadoVenta.jsx";
+import EmpleadoVentas from "./pages/EmpleadoVentas.jsx";
+import AdminVentas from "./pages/AdminVentas.jsx";
 
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
@@ -47,6 +50,9 @@ function Home() {
               <Link to="/admin/tareas/nueva" className="btn btn-outline-primary">
                 <i className="bi bi-clipboard-plus me-1" /> Nueva tarea (ensamblaje)
               </Link>
+              <Link to="/admin/ventas" className="btn btn-outline-primary">
+                 <i className="bi bi-clipboard-data me-1" /> Ventas (admin)
+              </Link>
             </div>
           ) : (
             <div className="d-grid gap-2">
@@ -56,6 +62,13 @@ function Home() {
               <Link to="/empleado/tareas" className="btn btn-outline-secondary">
                 <i className="bi bi-clipboard-check me-1" /> Mis tareas
               </Link>
+              <Link to="/empleado/venta" className="btn btn-outline-success">
+                <i className="bi bi-bag-check me-1" /> Vender
+              </Link>
+              <Link to="/empleado/ventas" className="btn btn-outline-secondary">
+                <i className="bi bi-receipt me-1" /> Mis ventas
+              </Link>
+              
             </div>
           )}
         </div>
@@ -132,6 +145,30 @@ export default function App() {
             element={
               <PrivateRoute>
                 <EmpleadoCatalogo />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/empleado/venta"
+            element={
+              <PrivateRoute>
+                <EmpleadoVenta />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/empleado/ventas"
+            element={
+              <PrivateRoute>
+                <EmpleadoVentas />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/admin/ventas"
+            element={
+              <PrivateRoute role="ADMINISTRADOR">
+                <AdminVentas />
               </PrivateRoute>
             }
           />
