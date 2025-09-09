@@ -16,6 +16,12 @@ export default function AdminNuevaTarea() {
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
 
+  
+    const loadComponentes = async () => {
+    const { data } = await api.get("/admin/componentes/lista");
+    setComponentes(data?.componentes ?? []);
+    };
+
   // Empleados
   useEffect(() => {
     (async () => {
@@ -35,6 +41,7 @@ export default function AdminNuevaTarea() {
       try {
         const { data } = await api.get("/admin/componentes/lista");
         setComponentes(data?.componentes ?? []);
+        await loadComponentes();
       } catch (e) {
         setMsg("No se pudo cargar la lista de componentes.");
       }
@@ -87,6 +94,7 @@ const submit = async (e) => {
     setMsg("Tarea creada");
     setBom([]);
     setF(init);
+    await loadComponentes();
   } catch (err) {
     setMsg(err?.response?.data?.message || "Error al crear tarea");
   } finally {
