@@ -1,24 +1,30 @@
 <?php
 
-// app/Http/Controllers/AdminProductoController.php
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Producto;
 use App\Models\Categoria;
 use App\Models\PcCategoria;
+use Illuminate\Support\Facades\DB; 
 
 class AdminProductoController extends Controller
 {
     // Categorías de componentes
-    public function listarCategoriasComponentes()
-    {
-        return response()->json([
-            'categorias' => Categoria::orderBy('nombre')->get(['id','nombre','descripcion'])
-        ]);
-    }
+public function listarCategoriasComponentes()
+{
+    // Traer todas las categorías tal cual de la tabla
+    $cats = Categoria::select('id','nombre','descripcion')->get();
 
-    // Categorías de PCs (prearmadas)
+    return response()->json([
+        'categorias' => $cats
+    ]);
+}
+
+
+
+
+    // Categorías de PCs (prearmadas)sortBy
     public function listarCategoriasPC()
     {
         return response()->json([

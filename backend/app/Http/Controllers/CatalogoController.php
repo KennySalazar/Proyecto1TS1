@@ -24,11 +24,11 @@ class CatalogoController extends Controller
             ])
             ->where('stock', '>', 0);
 
-        if ($tipo) {
-            $q->where('tipo', $tipo);
-        } else {
-            $q->whereIn('tipo', ['COMPONENTE', 'PREARMADA']);
-        }
+            if ($tipo) {
+            $q->where('tipo', $tipo); 
+            } else {
+            $q->whereIn('tipo', ['COMPONENTE', 'PREARMADA', 'PERSONALIZADA']);
+            }
 
         if ($pcCategoriaId) {
             $q->where('pc_categoria_id', $pcCategoriaId);

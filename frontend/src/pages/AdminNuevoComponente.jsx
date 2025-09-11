@@ -17,6 +17,7 @@ export default function AdminNuevoComponente() {
     (async () => {
       try {
         const { data } = await api.get("/admin/categorias");
+        console.log(data);
         setCats(data?.categorias ?? []);
       } catch {/* ignore */}
     })();
@@ -40,10 +41,10 @@ export default function AdminNuevoComponente() {
         stock: Number(f.stock || 0),
       };
       await api.post("/admin/componentes", payload);
-      setMsg("✅ Componente creado correctamente");
+      setMsg("Componente creado correctamente");
       setF(init);
     } catch (err) {
-      setMsg(err?.response?.data?.message || "❌ Error al crear componente");
+      setMsg(err?.response?.data?.message || "Error al crear componente");
     } finally { setLoading(false); }
   };
 

@@ -43,6 +43,7 @@ export default function EmpleadoCatalogo() {
           <option value={Tipo.TODOS}>Tipo: todos</option>
           <option value={Tipo.COMP}>Componentes</option>
           <option value={Tipo.PRE}>PC prearmadas</option>
+          <option value="PERSONALIZADA">Personalizadas</option>
         </select>
 
         <div className="input-group" style={{maxWidth:360}}>

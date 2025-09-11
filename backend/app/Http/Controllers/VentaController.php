@@ -105,17 +105,42 @@ class VentaController extends Controller
     }
 
     // POST /ventas/{id}/pagar
-    public function pagar(int $id)
+        public function pagar(int $id)
     {
-        $affected = DB::table('ventas')
-            ->where('id',$id)
-            ->where('estado','PENDIENTE')
-            ->update(['estado' => 'PAGADA']);
+        $user = Auth::user();
 
-        if (!$affected) {
-            return response()->json(['message'=>'No se pudo marcar como pagada (¿ya está pagada o no existe?)'],422);
-        }
-        return response()->json(['message'=>'Venta pagada']);
+        return DB::transaction(function () use ($id, $user) {
+            $venta = DB::table('ventas')->where('id', $id)->lockForUpdate()->first();
+            if (!$venta) {
+                return response()->json(['message' => 'Venta no existe'], 404);
+            }
+
+            // Permisos: administrador o dueño de la venta
+            $esAdmin = in_array(strtoupper(optional($user->rol)->nombre), ['ADMIN','ADMINISTRADOR'], true);
+            if (!$esAdmin && $venta->vendedor_id !== $user->id) {
+                return response()->json(['message' => 'No autorizado'], 403);
+            }
+
+            if ($venta->estado === 'CANCELADA') {
+                return response()->json(['message' => 'No se puede pagar una venta cancelada'], 422);
+            }
+
+            if ($venta->estado === 'PAGADA') {
+                // idempotente: no es error volver a pagar
+                return response()->json(['message' => 'Venta ya estaba pagada'], 200);
+            }
+
+            if ($venta->estado !== 'PENDIENTE') {
+                return response()->json(['message' => 'Estado inválido para pagar'], 422);
+            }
+
+            DB::table('ventas')->where('id', $id)->update(['estado' => 'PAGADA']);
+
+            // (Opcional) registrar forma de pago, referencia, etc.
+            // DB::table('pagos')->insert([...]);
+
+            return response()->json(['message' => 'Venta pagada']);
+        });
     }
 
         // EMPLEADO: Mis ventas (con filtros)
@@ -164,48 +189,97 @@ class VentaController extends Controller
         return response()->json(['venta' => $venta]);
     }
 
-    public function cancelar(int $id)
+   public function cancelar(Request $r, int $id)
 {
     $user = Auth::user();
+    $modo = $r->input('modo', 'reponer');  // 'reponer' | 'catalogo'
 
-    return DB::transaction(function () use ($id, $user) {
-        // Trae la venta con lock para evitar condiciones de carrera
+    return DB::transaction(function () use ($id, $user, $modo) {
         $venta = DB::table('ventas')->where('id', $id)->lockForUpdate()->first();
         if (!$venta) {
             return response()->json(['message' => 'Venta no existe'], 404);
         }
 
-        // Permisos: el vendedor dueño o el admin
+        // Permisos
         $esAdmin = in_array(strtoupper(optional($user->rol)->nombre), ['ADMIN','ADMINISTRADOR'], true);
         if (!$esAdmin && $venta->vendedor_id !== $user->id) {
             return response()->json(['message' => 'No autorizado'], 403);
         }
 
+        if ($venta->estado === 'CANCELADA') {
+            return response()->json(['message' => 'Ya estaba cancelada'], 200);
+        }
+        if ($venta->estado === 'PAGADA') {
+            return response()->json(['message' => 'No se puede cancelar una venta pagada'], 422);
+        }
         if ($venta->estado !== 'PENDIENTE') {
-            return response()->json(['message' => 'Solo se pueden cancelar ventas en estado PENDIENTE'], 422);
+            return response()->json(['message' => 'Sólo PENDIENTE puede cancelarse'], 422);
         }
 
-        // Reponer stock por cada detalle
+        // Procesar cada detalle
         $detalles = DB::table('venta_detalles')->where('venta_id', $id)->get();
+
         foreach ($detalles as $d) {
-            /** @var \App\Models\Producto $p */
-            $p = Producto::lockForUpdate()->find($d->producto_id);
-            if ($p) {
-                $p->increment('stock', $d->cantidad);
+            // lock del producto del detalle
+            $p = DB::table('productos')->lockForUpdate()->find($d->producto_id);
+            if (!$p) continue;
+
+            if ($p->tipo === 'PERSONALIZADA') {
+                if ($modo === 'reponer') {
+                    // 1) devolver componentes
+                    $rows = DB::table('producto_componentes')->where('producto_id',$p->id)->get();
+                    foreach ($rows as $row) {
+                        DB::table('productos')->where('id',$row->componente_id)->increment('stock', $row->cantidad);
+                        DB::table('movimientos_stock')->insert([
+                            'producto_id'     => $row->componente_id,
+                            'cambio_cantidad' => +$row->cantidad,
+                            'motivo'          => 'DEVOLUCION_ENSAMBLE',
+                            'referencia_tipo' => 'venta_cancelada',
+                            'referencia_id'   => $id,
+                        ]);
+                    }
+
+                    // 2) borrar hijos del personalizado
+                    DB::table('producto_componentes')->where('producto_id',$p->id)->delete();
+                    DB::table('movimientos_stock')->where('producto_id',$p->id)->delete();
+
+                    // 3) NO borrar el producto para no violar la FK del detalle
+                    DB::table('productos')->where('id',$p->id)->update([
+                        'stock' => 0,
+                        // opcional, para que no vuelva a aparecer en catálogos:
+                        // 'precio' => 0,
+                        // 'nombre' => DB::raw("CONCAT(nombre, ' [ANULADA #{$id}]')")
+                    ]);
+
+                } else { // 'catalogo' -> mantener PC y devolverla al stock=1
+                    DB::table('productos')->where('id',$p->id)->increment('stock', 1);
+                    DB::table('movimientos_stock')->insert([
+                        'producto_id'     => $p->id,
+                        'cambio_cantidad' => +1,
+                        'motivo'          => 'CANCELACION_VENTA',
+                        'referencia_tipo' => 'venta',
+                        'referencia_id'   => $id,
+                    ]);
+                }
+            } else {
+                // producto normal: reponer cantidad
+                DB::table('productos')->where('id',$p->id)->increment('stock', $d->cantidad);
                 DB::table('movimientos_stock')->insert([
                     'producto_id'     => $p->id,
-                    'cambio_cantidad' => +1 * $d->cantidad, // reponer
-                    'motivo'          => 'AJUSTE',
-                    'referencia_tipo' => 'venta_cancelada',
+                    'cambio_cantidad' => +$d->cantidad,
+                    'motivo'          => 'CANCELACION_VENTA',
+                    'referencia_tipo' => 'venta',
                     'referencia_id'   => $id,
                 ]);
             }
         }
 
-        // Cambiar estado
-        DB::table('ventas')->where('id', $id)->update(['estado' => 'CANCELADA']);
-
-        return response()->json(['message' => 'Venta cancelada y stock repuesto']);
+        DB::table('ventas')->where('id',$id)->update(['estado' => 'CANCELADA']);
+        return response()->json(['message' => 'Venta cancelada']);
     });
 }
+
+
+
+
 }

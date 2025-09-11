@@ -9,6 +9,8 @@ use App\Http\Controllers\AdminProductoController;
 use App\Http\Controllers\CatalogoController;
 use App\Http\Middleware\IsAdmin;
 use App\Http\Controllers\VentaController;
+use App\Http\Controllers\PersonalizadaController;
+use App\Http\Controllers\ComponentesController;
 
 Route::post('/login', [AuthController::class, 'login']);
 
@@ -26,34 +28,37 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('/empleados/{id}/estado', [UsuarioController::class, 'actDesEstado']);
 
         // Catálogo de administración
-        Route::get('/admin/categorias',        [AdminProductoController::class, 'listarCategoriasComponentes']); // categorías de componentes
-        Route::get('/admin/pc-categorias',     [AdminProductoController::class, 'listarCategoriasPC']);          // categorías de PCs
-        Route::post('/admin/componentes',      [AdminProductoController::class, 'crearComponente']);              // componente
-        Route::post('/admin/prearmadas',       [AdminProductoController::class, 'crearPrearmada']);               // prearmada sin BOM
-        Route::get('/admin/componentes/lista', [AdminProductoController::class, 'listarComponentesParaBom']);    // <-- LISTA DE COMPONENTES PARA TAREAS (BOM)
+        Route::get('/admin/categorias',        [AdminProductoController::class, 'listarCategoriasComponentes']);
+        Route::get('/admin/pc-categorias',     [AdminProductoController::class, 'listarCategoriasPC']);
+        Route::post('/admin/componentes',      [AdminProductoController::class, 'crearComponente']);
+        Route::post('/admin/prearmadas',       [AdminProductoController::class, 'crearPrearmada']);
+        Route::get('/admin/componentes/lista', [AdminProductoController::class, 'listarComponentesParaBom']);
 
         // Tareas (solo ENSAMBLAJE)
         Route::post('/tareas', [TareaController::class, 'store']);
 
-        Route::get('/admin/ventas',      [VentaController::class, 'adminIndex']);  // todas
-        Route::get('/admin/ventas/{id}', [VentaController::class, 'show']);       // detalle
+        // Ventas (admin)
+        Route::get('/admin/ventas',      [VentaController::class, 'adminIndex']);
+        Route::get('/admin/ventas/{id}', [VentaController::class, 'show']);
     });
 
-    // Catálogo visible para empleados (y admin si quieres probar)
+    // Catálogo visible
     Route::get('/catalogo/productos', [CatalogoController::class, 'index']);
 
     // Tareas (empleado / admin)
     Route::get('/tareas',               [TareaController::class, 'index']);
     Route::patch('/tareas/{id}/estado', [TareaController::class, 'actEstado']);
 
-    // Empleado
-    Route::get('/ventas',        [VentaController::class, 'index']);
-    Route::get('/ventas/{id}',   [VentaController::class, 'show']);
-    Route::post('/ventas',       [VentaController::class, 'store']);
-    Route::post('/ventas/{id}/pagar', [VentaController::class, 'pagar']);
-    Route::post('/ventas/{id}/cancelar',[VentaController::class, 'cancelar']);
+    // Ventas (empleado)
+    Route::get('/ventas',              [VentaController::class, 'index']);
+    Route::get('/ventas/{id}',         [VentaController::class, 'show']);
+    Route::post('/ventas',             [VentaController::class, 'store']);
+    Route::post('/ventas/{id}/pagar',  [VentaController::class, 'pagar']);
+    Route::post('/ventas/{id}/cancelar',[VentaController::class, 'cancelar']); // <-- una sola
 
-    // Admin
-    Route::get('/admin/ventas',      [VentaController::class, 'adminIndex']);
-    Route::get('/admin/ventas/{id}', [VentaController::class, 'show']);
+    // PC personalizada (empleado)
+    Route::get('/componentes/por-categoria', [ComponentesController::class, 'porCategoria']);
+    Route::post('/personalizadas/vender',    [PersonalizadaController::class, 'crearYVender']);
+    Route::post('/personalizadas/previsualizar', [PersonalizadaController::class, 'previsualizar']);
+
 });

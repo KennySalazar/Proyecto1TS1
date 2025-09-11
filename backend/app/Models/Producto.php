@@ -38,4 +38,10 @@ class Producto extends Model
     {
         return $this->belongsTo(PcCategoria::class, 'pc_categoria_id');
     }
+
+    public function bom() {
+  return $this->hasMany(ProductoComponente::class, 'producto_id')
+              ->with('componente:id,sku,nombre,precio');
+}
+
 }

@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 export default function AppNavbar() {
@@ -8,55 +8,74 @@ export default function AppNavbar() {
 
   const isAdmin = user?.rol === "ADMINISTRADOR";
 
+  // Menús por rol
+  const empleadoTabs = [
+    { to: "/empleado/catalogo",     icon: "bi-shop",             text: "Catálogo" },
+    { to: "/empleado/tareas",       icon: "bi-clipboard-check",  text: "Mis tareas" },
+    { to: "/empleado/venta",        icon: "bi-bag-check",        text: "Vender" },
+    { to: "/empleado/personalizada",icon: "bi-pc-display",       text: "PC personalizada" },
+    { to: "/empleado/ventas",       icon: "bi-receipt",          text: "Mis ventas" },
+  ];
+
+  const adminTabs = [
+    { to: "/admin/empleados",          icon: "bi-people",          text: "Empleados" },
+    { to: "/admin/componentes/nuevo",  icon: "bi-cpu",             text: "Nuevo componente" },
+    { to: "/admin/prearmadas/nuevo",   icon: "bi-pc",              text: "Nueva prearmada" },
+    { to: "/admin/tareas/nueva",       icon: "bi-clipboard-plus",  text: "Nueva tarea" },
+    { to: "/admin/ventas",             icon: "bi-clipboard-data",  text: "Ventas (admin)" },
+  ];
+
+  const tabs = isAdmin ? adminTabs : empleadoTabs;
+
   return (
-    <nav className="navbar navbar-dark bg-dark">
-      <div className="container">
-        <Link className="navbar-brand" to="/">
-          <i className="bi bi-cpu me-2" /> Venta y Ensamblaje de Computadoras
-        </Link>
+    <>
+      {/* Barra superior */}
+      <nav className="navbar navbar-dark bg-dark">
+        <div className="container">
+          <Link className="navbar-brand d-flex align-items-center" to="/">
+            <i className="bi bi-cpu me-2" />
+            Venta y Ensamblaje de Computadoras
+          </Link>
 
-        <div className="d-flex align-items-center gap-3">
-          {user && !isAdmin && (
-            <>
-              <Link to="/empleado/catalogo" className="nav-link">
-                <i className="bi bi-shop me-1" /> Catálogo
-              </Link>
-              <Link to="/empleado/tareas" className="nav-link">
-                <i className="bi bi-clipboard-check me-1" /> Mis tareas
-              </Link>
-              <Link to="/empleado/venta" className="nav-link">
-                <i className="bi bi-bag-check me-1" /> Vender
-              </Link>
-              <Link to="/empleado/ventas" className="nav-link">
-                <i className="bi bi-receipt me-1" /> Mis ventas
-              </Link>
-            </>
-          )}
-
-          {user && isAdmin && (
-            <>
-              <Link to="/admin/empleados" className="nav-link">
-                <i className="bi bi-people me-1" /> Empleados
-              </Link>
-              <Link to="/admin/ventas" className="nav-link">
-                <i className="bi bi-clipboard-data me-1" /> Ventas (admin)
-              </Link>
-            </>
-          )}
-
-          {user ? (
-            <button className="btn btn-outline-light btn-sm" onClick={logout}>
-              <i className="bi bi-box-arrow-right me-1" /> Salir
-            </button>
-          ) : (
-            location.pathname !== "/login" && (
-              <Link className="btn btn-outline-light btn-sm" to="/login">
-                Entrar
-              </Link>
-            )
-          )}
+          <div className="d-flex align-items-center gap-2">
+            {user && (
+              <span className="text-white-50 me-2 small">
+                {user.nombre} · {user.rol}
+              </span>
+            )}
+            {user ? (
+              <button className="btn btn-outline-light btn-sm" onClick={logout}>
+                <i className="bi bi-box-arrow-right me-1" /> Salir
+              </button>
+            ) : (
+              <Link className="btn btn-outline-light btn-sm" to="/login">Entrar</Link>
+            )}
+          </div>
         </div>
-      </div>
-    </nav>
+      </nav>
+
+      {/* Sub-barra con tabs por rol */}
+      {user && (
+        <div className="bg-light border-bottom">
+          <div className="container">
+            <ul className="nav nav-pills py-2 flex-wrap">
+              {tabs.map(({ to, icon, text }) => (
+                <li className="nav-item me-2 mb-2" key={to}>
+                  <NavLink
+                    to={to}
+                    end
+                    className={({ isActive }) =>
+                      "nav-link " + (isActive ? "active" : "link-dark")
+                    }
+                  >
+                    <i className={`bi ${icon} me-1`} /> {text}
+                  </NavLink>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

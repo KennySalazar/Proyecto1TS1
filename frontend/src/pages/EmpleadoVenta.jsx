@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import api from "../api/client";
 
-const TIPO = { TODOS: "", COMP: "COMPONENTE", PRE: "PREARMADA" };
+const TIPO = { TODOS: "", COMP: "COMPONENTE", PRE: "PREARMADA", PERSONALIZADA: "PERSONALIZADA" };
 
 export default function EmpleadoVenta() {
   const [tipo, setTipo] = useState(TIPO.TODOS);
@@ -52,7 +52,7 @@ export default function EmpleadoVenta() {
   const rmFromCart = (id) => setCart(cart.filter(x => x.producto_id !== id));
   const updQty = (id, qty) => setCart(cart.map(x => x.producto_id === id ? { ...x, cantidad: qty } : x));
 
-  // ✅ Flujo NUEVO: crea venta PENDIENTE y abre modal
+ 
   const confirmar = async () => {
     if (cart.length === 0) { setErr("Agrega al menos 1 producto al carrito."); return; }
      if (!cliente.nombre.trim()) {
@@ -126,6 +126,7 @@ export default function EmpleadoVenta() {
           <option value={TIPO.TODOS}>Tipo: todos</option>
           <option value={TIPO.COMP}>Componentes</option>
           <option value={TIPO.PRE}>PC prearmadas</option>
+          <option value={TIPO.PERSONALIZADA}>Pc Personalizada</option>
         </select>
         <div className="input-group" style={{maxWidth:360}}>
           <input className="form-control form-control-sm" placeholder="Buscar (sku, nombre, marca, modelo, desc.)"

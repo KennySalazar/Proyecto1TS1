@@ -13,6 +13,7 @@ import EmpleadoCatalogo from "./pages/EmpleadoCatalogo.jsx";
 import EmpleadoVenta from "./pages/EmpleadoVenta.jsx";
 import EmpleadoVentas from "./pages/EmpleadoVentas.jsx";
 import AdminVentas from "./pages/AdminVentas.jsx";
+import EmpleadoPersonalizada from "./pages/EmpleadoPersonalizada.jsx";
 
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
@@ -35,42 +36,6 @@ function Home() {
           <p className="mb-3">
             Hola, <b>{user.nombre}</b> ({user.rol})
           </p>
-
-          {isAdmin ? (
-            <div className="d-grid gap-2">
-              <Link to="/admin/empleados" className="btn btn-outline-secondary">
-                <i className="bi bi-people me-1" /> Empleados
-              </Link>
-              <Link to="/admin/componentes/nuevo" className="btn btn-outline-primary">
-                <i className="bi bi-cpu me-1" /> Nuevo componente
-              </Link>
-              <Link to="/admin/prearmadas/nuevo" className="btn btn-outline-primary">
-                <i className="bi bi-pc me-1" /> Nueva PC prearmada
-              </Link>
-              <Link to="/admin/tareas/nueva" className="btn btn-outline-primary">
-                <i className="bi bi-clipboard-plus me-1" /> Nueva tarea (ensamblaje)
-              </Link>
-              <Link to="/admin/ventas" className="btn btn-outline-primary">
-                 <i className="bi bi-clipboard-data me-1" /> Ventas (admin)
-              </Link>
-            </div>
-          ) : (
-            <div className="d-grid gap-2">
-              <Link to="/empleado/catalogo" className="btn btn-outline-primary">
-                <i className="bi bi-shop me-1" /> Catálogo (componentes y PCs)
-              </Link>
-              <Link to="/empleado/tareas" className="btn btn-outline-secondary">
-                <i className="bi bi-clipboard-check me-1" /> Mis tareas
-              </Link>
-              <Link to="/empleado/venta" className="btn btn-outline-success">
-                <i className="bi bi-bag-check me-1" /> Vender
-              </Link>
-              <Link to="/empleado/ventas" className="btn btn-outline-secondary">
-                <i className="bi bi-receipt me-1" /> Mis ventas
-              </Link>
-              
-            </div>
-          )}
         </div>
       </div>
     </div>
@@ -171,6 +136,12 @@ export default function App() {
                 <AdminVentas />
               </PrivateRoute>
             }
+          />
+          <Route path="/empleado/personalizada" element={
+              <PrivateRoute>
+                <EmpleadoPersonalizada />
+              </PrivateRoute>
+            } 
           />
 
           <Route path="*" element={<Navigate to="/" replace />} />
